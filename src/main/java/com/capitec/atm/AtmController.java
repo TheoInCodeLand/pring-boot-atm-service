@@ -78,4 +78,9 @@ public class AtmController {
     public String deleteAccount(@PathVariable String accNum){
         return atmService.deleteAccount(accNum);
     }
+
+    @GetMapping("/accounts/{accNum}/statement")
+    public ArrayList<String> getAccountStatement(@PathVariable String accNum){
+        return atmService.getAccountStatement(accNum);
+    }
 }

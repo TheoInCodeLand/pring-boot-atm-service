@@ -124,4 +124,13 @@ public class AtmService {
 
         return "Account not found!";
     }
+
+    public ArrayList<String> getAccountStatement(String accNum) {
+        for (Account currentAccount : accounts) {
+            if (currentAccount.getAccountNumber().equalsIgnoreCase(accNum)) {
+                return currentAccount.getTransactions();
+            }
+        }
+        return null;
+    }
 }
