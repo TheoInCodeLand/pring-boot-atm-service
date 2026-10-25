@@ -1,9 +1,13 @@
 package com.capitec.atm;
 
+import java.util.ArrayList;
+
 public class Account {
     private String accountNumber;
     private String ownerName;
     private double balance;
+
+    private ArrayList<String> transactions = new ArrayList<>();
 
     public Account(){
         // Empty Constructor (Required by Spring/Jackson & Databases)
@@ -13,6 +17,7 @@ public class Account {
         this.accountNumber = accountNumber;
         this.ownerName = ownerName;
         this.balance = balance;
+        this.transactions.add("Account opened with initial balance: R" + balance + "\n\n");
     }
 
     boolean withdraw(double amount){
@@ -21,6 +26,8 @@ public class Account {
         }
         if (amount <= this.balance){
             this.balance -= amount;
+            this.transactions.add("Withdrew: -R" + amount + " | New Balance: R" + this.balance);
+
             return true;
 
         } else {
@@ -34,6 +41,7 @@ public class Account {
             throw new IllegalArgumentException("Deposit Failed. Invalid Amount.");
         }
         this.balance += amount;
+        this.transactions.add("Deposited: +R" + amount + " | New Balance: R" + this.balance);
 
     }
 
@@ -59,6 +67,10 @@ public class Account {
 
     public void setBalance(double balance){
         this.balance = balance;
+    }
+
+    public ArrayList<String> getTransactions() {
+        return transactions;
     }
 
 }
