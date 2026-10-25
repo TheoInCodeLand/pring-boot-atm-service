@@ -71,4 +71,4 @@ In **Phase 2 (This Repository)**, that core engine has been refactored and eleva
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/YOUR-USERNAME/capitec-atm-springboot-api.git](https://github.com/YOUR-USERNAME/capitec-atm-springboot-api.git)
+   git clone https://github.com/TheoInCodeLand/pring-boot-atm-service.git
