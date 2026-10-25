@@ -1,9 +1,7 @@
 package com.capitec.atm;
 
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @RestController
 public class AtmController {
@@ -105,9 +103,64 @@ public class AtmController {
         return ownerAccounts;
     }
 
+    // 1. Create a brand-new Account using @RequestBody
     @PostMapping("/accounts")
-    public String createAccount(@RequestBody Account newAccount){
+    public Account createAccount(@RequestBody Account newAccount){
         acc.add(newAccount);
-        return "Account successfully created!";
+        return  newAccount;
     }
+
+    // 2. Deposit money into a specific account
+    @PostMapping("/accounts/{accNum}/deposit")
+    public String depositMoney(@PathVariable String accNum, @RequestParam double amount){
+        for( Account currentAccount : acc ){
+            if( currentAccount.getAccountNumber().equalsIgnoreCase(accNum) ){
+                currentAccount.deposit(amount);
+                return "Deposit successful! New balance: R" + currentAccount.getBalance();
+            }
+        }
+        return "Account not found!";
+    }
+
+    // 3. Withdraw money from a specific account
+    @PostMapping("/accounts/{accNum}/withdraw")
+    public String withdrawMoney(@PathVariable String accNum, @RequestParam double amount){
+        for( Account currentAccount : acc ){
+            if( currentAccount.getAccountNumber().equalsIgnoreCase(accNum) ){
+                boolean success = currentAccount.withdraw(amount); // Returns updated account with new balance!
+                if (success) {
+                    return "Withdrawal successful! New balance: R" + currentAccount.getBalance();
+                } else {
+                    return "Invalid amount! Current balance: R" + currentAccount.getBalance();
+                }
+            }
+        }
+        return "Account not found!";
+    }
+
+    // @PutMapping (Updating Account Details)
+    @PutMapping("/accounts/{accNum}")
+    public String updateAccount(@PathVariable String accNum, @RequestBody Account updatedAccount){
+        for( Account currentAccount : acc ){
+            if( currentAccount != null && currentAccount.getAccountNumber().equalsIgnoreCase(accNum) ){
+                currentAccount.setOwnerName(updatedAccount.getOwnerName());
+                currentAccount.setBalance(updatedAccount.getBalance());
+
+                return "Account " + currentAccount.getAccountNumber() + " Successfully updated.";
+            }
+        }
+        return "Account not found!";
+    }
+
+    //@DeleteMapping (Closing / Delete an Account)
+    @DeleteMapping("/accounts/{accNum}")
+    public String deleteAccount(@PathVariable String accNum){
+        boolean deleted = acc.removeIf((Account currentAccount) -> currentAccount.getAccountNumber().equalsIgnoreCase(accNum));
+        if (deleted){
+            return "Account " + accNum + "successfully deleted.";
+        } else {
+            return "Account not found!";
+        }
+    }
+
 }
