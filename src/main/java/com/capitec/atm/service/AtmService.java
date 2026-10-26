@@ -1,5 +1,6 @@
-package com.capitec.atm;
+package com.capitec.atm.service;
 
+import com.capitec.atm.model.Account;
 import org.springframework.stereotype.Service;
 import java.util.*;
 
@@ -67,7 +68,7 @@ public class AtmService {
     public String deleteAccount(String accNum){
         boolean accountDeleted = accounts.removeIf((Account currentAccount) -> currentAccount.getAccountNumber().equalsIgnoreCase(accNum));
         if (accountDeleted){
-            return "Account " + accNum + "successfully deleted.";
+            return "Account " + accNum + " successfully deleted.";
         } else {
             return "Account not found!";
         }

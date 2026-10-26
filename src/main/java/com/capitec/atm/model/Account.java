@@ -1,4 +1,4 @@
-package com.capitec.atm;
+package com.capitec.atm.model;
 
 import java.util.ArrayList;
 
@@ -17,10 +17,10 @@ public class Account {
         this.accountNumber = accountNumber;
         this.ownerName = ownerName;
         this.balance = balance;
-        this.transactions.add("Account opened with initial balance: R" + balance + "\n\n");
+        this.transactions.add("Account opened with initial balance: R" + balance + ".");
     }
 
-    boolean withdraw(double amount){
+    public boolean withdraw(double amount){
         if(amount <= 0){
             throw new IllegalArgumentException("Transaction Failed. Invalid Amount.");
         }
