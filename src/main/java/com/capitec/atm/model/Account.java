@@ -1,13 +1,16 @@
 package com.capitec.atm.model;
+import jakarta.persistence.*;
+import java.util.*;
 
-import java.util.ArrayList;
-
+@Entity
 public class Account {
+    @Id
     private String accountNumber;
     private String ownerName;
     private double balance;
 
-    private ArrayList<String> transactions = new ArrayList<>();
+    @ElementCollection
+    private List<String> transactions = new ArrayList<>();
 
     public Account(){
         // Empty Constructor (Required by Spring/Jackson & Databases)
@@ -69,7 +72,7 @@ public class Account {
         this.balance = balance;
     }
 
-    public ArrayList<String> getTransactions() {
+    public List<String> getTransactions() {
         return transactions;
     }
 

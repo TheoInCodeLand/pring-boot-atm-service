@@ -1,48 +1,54 @@
 package com.capitec.atm.service;
 
 import com.capitec.atm.model.Account;
+import com.capitec.atm.repository.AccountRepository;
 import org.springframework.stereotype.Service;
+
+import java.lang.reflect.Constructor;
 import java.util.*;
 
 @Service
 public class AtmService {
 
+//    Constructor Dependency Injection
+    private final AccountRepository accountRepository;
     private ArrayList<Account> accounts = new ArrayList<>();
 
-    public AtmService() {
-        accounts.add(new Account("ACC-1001", "Andile Masilela", 52300));
-        accounts.add(new Account("ACC-1002", "Siyabonga Mashimane", 1800));
-        accounts.add(new Account("ACC-1003", "Lionel Ngoma", 12500));
-        accounts.add(new Account("ACC-1004", "Nhlakanipho Mpisane", 950));
-        accounts.add(new Account("ACC-1005", "Siphosethu Skhosane", 52300));
-        accounts.add(new Account("ACC-1006", "Mageba Mnguni", 3400));
-        accounts.add(new Account("ACC-1007", "Kgopotso Mokwena", 1500));
-        accounts.add(new Account("ACC-1008", "Viwe Mabhongo", 89000));
-        accounts.add(new Account("ACC-1009", "Siyabonga Magudulela", 450));
+    public AtmService(AccountRepository accountRepository) {
+//      Constructor Dependency Injection
+        this.accountRepository = accountRepository;
+
+        if (accountRepository.count()==0){
+            accountRepository.save(new Account("ACC-1001", "Andile Masilela", 52300));
+            accountRepository.save(new Account("ACC-1002", "Siyabonga Mashimane", 1800));
+            accountRepository.save(new Account("ACC-1003", "Lionel Ngoma", 12500));
+            accountRepository.save(new Account("ACC-1004", "Nhlakanipho Mpisane", 950));
+            accountRepository.save(new Account("ACC-1005", "Siphosethu Skhosane", 52300));
+            accountRepository.save(new Account("ACC-1006", "Mageba Mnguni", 3400));
+            accountRepository.save(new Account("ACC-1007", "Kgopotso Mokwena", 1500));
+            accountRepository.save(new Account("ACC-1008", "Viwe Mabhongo", 89000));
+            accountRepository.save(new Account("ACC-1009", "Siyabonga Magudulela", 450));
+        }
     }
 
     // Business logic method 1: Get all accounts
-    public ArrayList<Account> getAllAccounts(){
-        return accounts;
+    public List<Account> getAllAccounts(){
+        return accountRepository.findAll();
     }
 
     // Business logic method 2: Find a single accoun
-    public Account findAccountByNumber(String accountNumber){
-        for(Account account : accounts){
-            if(account.getAccountNumber().equalsIgnoreCase(accountNumber)){
-                return account;
-            }
-        }
-        return null;
+    public Optional<Account> findAccountByNumber(String accountNumber){
+        return accountRepository.findByAccountNumberIgnoreCase(accountNumber);
     }
 
     // Business logic method 3: Deposit money into an account
     public String depositMoney(String accNum, double amount){
-        for (Account currentAccount : accounts){
-            if(currentAccount.getAccountNumber().equalsIgnoreCase(accNum)){
-                currentAccount.deposit(amount);
-                return "Deposit successful! New balance: R" + currentAccount.getBalance();
-            }
+        Optional<Account> currentAccount = findAccountByNumber(accNum);
+        if (currentAccount != null){
+            Account account = currentAccount.get();
+            account.deposit(amount);
+            accountRepository.save(account);    // Saves the new balance & transaction to Neon!
+            return "Deposit successful! New balance: R" + account.getBalance();
         }
 
         return "Account " + accNum + " not found!";
@@ -50,88 +56,79 @@ public class AtmService {
 
     // Business logic method 4: Withdraw money from an account
     public String withdrawMoney(String accNum, double amount){
-        for(Account currentAccount : accounts){
-            if(currentAccount.getAccountNumber().equalsIgnoreCase(accNum)){
-                boolean withdrawn = currentAccount.withdraw(amount);
-                if(withdrawn){
-                    return "Withdrawal successful! New balance: R" + currentAccount.getBalance();
-                } else {
-                    return "Invalid amount! Current balance: R" + currentAccount.getBalance();
-                }
-            }
+
+        Optional<Account> optionalAccount = findAccountByNumber(accNum);
+        if (optionalAccount.isPresent()){
+            Account currentAccount = optionalAccount.get();
+            currentAccount.withdraw(amount);
+            accountRepository.save(currentAccount);
+            return "Withdrawal successful! New balance: R" + currentAccount.getBalance();
         }
 
         return "Account " + accNum + " not found!";
     }
 
     // Business logic method 5: Delete account
-    public String deleteAccount(String accNum){
-        boolean accountDeleted = accounts.removeIf((Account currentAccount) -> currentAccount.getAccountNumber().equalsIgnoreCase(accNum));
-        if (accountDeleted){
-            return "Account " + accNum + " successfully deleted.";
-        } else {
-            return "Account not found!";
+    public String deleteAccount(String accNum) {
+        Optional<Account> optionalAccount = accountRepository.findByAccountNumberIgnoreCase(accNum);
+
+        if (optionalAccount.isEmpty()) {
+            return "Account " + accNum + " not found!";
         }
+
+        accountRepository.delete(optionalAccount.get());
+        return "Account " + accNum + " successfully deleted!";
     }
 
     //
-    public ArrayList<Account> getNsfasAccounts(double maxBalance){
-        ArrayList<Account> nsfasStudents = new ArrayList<>();
-        for(Account currentAcccount : accounts){
-            if(currentAcccount.getBalance() <= maxBalance){
-                nsfasStudents.add(currentAcccount);
-            }
-        }
+    public List getNsfasAccounts(double maxBalance){
 
-        return nsfasStudents;
+        return accountRepository.findByBalanceLessThanEqualOrderByBalanceDesc(maxBalance);
     }
 
-    public ArrayList<Account> getRangedAccounts(double minBalance, double maxBalance){
-        ArrayList<Account> accountsInRange = new ArrayList<>();
-        for(Account currentAcccount : accounts){
-            if(currentAcccount.getBalance() >= minBalance && currentAcccount.getBalance() <= maxBalance){
-                accountsInRange.add(currentAcccount);
-            }
-        }
+    public List getRangedAccounts(double minBalance, double maxBalance){
 
-        return accountsInRange;
+        return accountRepository.findByBalanceBetweenOrderByBalanceDesc(minBalance,maxBalance);
     }
 
-    public ArrayList<Account> getAccountByUserName(String name){
-        ArrayList<Account> filteredAccount = new ArrayList<>();
-        for(Account currentAccount : accounts){
-            if(currentAccount.getOwnerName().toLowerCase().contains(name.toLowerCase())){
-                filteredAccount.add(currentAccount);
-            }
-        }
+    public List<Account> getAccountByUserName(String name){
 
-        return filteredAccount;
+        return accountRepository.findByOwnerNameContainingIgnoreCaseOrderByOwnerNameAsc(name);
     }
 
     public Account createAccount(Account newAccount){
-        accounts.add(newAccount);
+        accountRepository.save(newAccount);
         return newAccount;
     }
 
     public String updateAccount(String accNum, Account updatedAccount){
-        for(Account currentAccount : accounts){
-            if(currentAccount.getAccountNumber().equalsIgnoreCase(accNum)){
-                currentAccount.setOwnerName(updatedAccount.getOwnerName());
-                currentAccount.setBalance(updatedAccount.getBalance());
 
-                return "Account " + currentAccount.getAccountNumber() + " Successfully updated.";
-            }
+//        for(Account currentAccount : accounts){
+//            if(currentAccount.getAccountNumber().equalsIgnoreCase(accNum)){
+//                currentAccount.setOwnerName(updatedAccount.getOwnerName());
+//                currentAccount.setBalance(updatedAccount.getBalance());
+//
+//                return "Account " + currentAccount.getAccountNumber() + " Successfully updated.";
+//            }
+//        }
+
+        if (accountRepository.findByAccountNumberIgnoreCase(accNum).get() != null){
+            accountRepository.findByAccountNumberIgnoreCase(accNum).get().setOwnerName(updatedAccount.getOwnerName());
+            accountRepository.findByAccountNumberIgnoreCase(accNum).get().setBalance(updatedAccount.getBalance());
+
+            accountRepository.save(accountRepository.findByAccountNumberIgnoreCase(accNum).get());
+
+            return "Accoun Successfully updated." + "new name set to: " + accountRepository.findByAccountNumberIgnoreCase(accNum).get().getOwnerName() + " and new balance: " + accountRepository.findByAccountNumberIgnoreCase(accNum).get().getBalance();
         }
 
         return "Account not found!";
     }
 
-    public ArrayList<String> getAccountStatement(String accNum) {
-        for (Account currentAccount : accounts) {
-            if (currentAccount.getAccountNumber().equalsIgnoreCase(accNum)) {
-                return currentAccount.getTransactions();
-            }
+    public List<String> getAccountStatement(String accNum) {
+        if (accountRepository.findByAccountNumberIgnoreCase(accNum).isPresent()){
+            return accountRepository.findByAccountNumberIgnoreCase(accNum).get().getTransactions();
+        } else {
+            return null;
         }
-        return null;
     }
 }

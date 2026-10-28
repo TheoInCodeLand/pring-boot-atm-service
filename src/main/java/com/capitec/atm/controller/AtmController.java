@@ -26,14 +26,14 @@ public class AtmController {
     }
 
     @GetMapping("/accounts")
-    public ArrayList<Account> getAllAccounts(){
+    public List<Account> getAllAccounts(){
         return atmService.getAllAccounts();
     }
 
     @GetMapping("/accounts/{accountNumber}")
-    public ResponseEntity<Account> getSingleAccount(@PathVariable String accountNumber){
-        Account foundAccount = atmService.findAccountByNumber(accountNumber);
-        if(foundAccount != null){
+    public ResponseEntity<Optional<Account>> getSingleAccount(@PathVariable String accountNumber){
+        Optional<Account> foundAccount = atmService.findAccountByNumber(accountNumber);
+        if(foundAccount.isPresent()){
             return ResponseEntity.status(HttpStatus.OK).body(foundAccount);         // Sends 200 OK + JSON Account
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(foundAccount);       // Sends 404 Not Found!
@@ -41,18 +41,18 @@ public class AtmController {
     }
 
     @GetMapping("/accounts/nsfas")
-    public ArrayList<Account> getNsfasAccounts(@RequestParam double maxBalance){
+    public List getNsfasAccounts(@RequestParam double maxBalance){
         return atmService.getNsfasAccounts(maxBalance);
     }
 
     @GetMapping("/accounts/range")
-    public ArrayList<Account> getRangedAccounts(@RequestParam(defaultValue = "1000") double minBalance, @RequestParam(defaultValue = "2000") double maxBalance){
+    public List getRangedAccounts(@RequestParam(defaultValue = "1000") double minBalance, @RequestParam(defaultValue = "2000") double maxBalance){
         return atmService.getRangedAccounts(minBalance, maxBalance);
     }
 
     @GetMapping("/accounts/owner")
-    public ResponseEntity<ArrayList<Account>> getAccountByUserName(@RequestParam String name){
-        ArrayList<Account> filteredAccount = atmService.getAccountByUserName(name);
+    public ResponseEntity<List<Account>> getAccountByUserName(@RequestParam String name){
+        List<Account> filteredAccount = atmService.getAccountByUserName(name);
         return ResponseEntity.status(HttpStatus.OK).body(filteredAccount);
     }
 
@@ -108,8 +108,8 @@ public class AtmController {
 
 
     @GetMapping("/accounts/{accNum}/statement")
-    public ResponseEntity<ArrayList<String>> getAccountStatement(@PathVariable String accNum){
-        ArrayList<String> statementFound = atmService.getAccountStatement(accNum);
+    public ResponseEntity<List<String>> getAccountStatement(@PathVariable String accNum){
+        List<String> statementFound = atmService.getAccountStatement(accNum);
         if(statementFound != null){
             return ResponseEntity.status(HttpStatus.OK).body(statementFound);
         } else {
